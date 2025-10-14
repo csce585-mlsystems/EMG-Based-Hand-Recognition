@@ -167,8 +167,29 @@ class GestureClassifier:
         joblib.dump(self.label_encoder, f"{base_path}_encoder.joblib")
         
         # Save metadata
+    def _convert_numpy(self, obj):
+        """Helper: Convert NumPy types for JSON serialization."""
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
+    def save_model(self, filepath: str):
+        """Save complete model package."""
+        base_path = os.path.splitext(filepath)[0]
+        
+        # Save model components
+        joblib.dump(self.model, f"{base_path}_model.joblib")
+        joblib.dump(self.scaler, f"{base_path}_scaler.joblib")
+        joblib.dump(self.label_encoder, f"{base_path}_encoder.joblib")
+        
+        # Save metadata (JSON-safe conversion)
         with open(f"{base_path}_metadata.json", 'w') as f:
-            json.dump(self.metadata, f, indent=2)
+            json.dump(self.metadata, f, indent=2, default=self._convert_numpy)
             
         print(f"Model saved to {base_path}_*")
     

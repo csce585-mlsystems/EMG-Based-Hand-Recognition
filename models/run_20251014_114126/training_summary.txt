@@ -1,0 +1,11 @@
+EMG Gesture Recognition Training Summary
+==================================================
+
+Data: data/S1_A1_E1.mat
+Classifier: svm
+Window size: 250.0ms
+Overlap: 0.5
+Sampling rate: 2000.0Hz
+
+CV Accuracy: 0.8137 ± 0.0356
+Test Accuracy: 0.8148
