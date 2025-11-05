@@ -55,6 +55,10 @@ def load_multiple_subjects(data_dir, subject_ids):
             
         try:
             emg, labels = load_ninapro_subject(str(filepath))
+            original_gestures = len(np.unique(labels))
+            emg, labels, label_mapping = filter_gestures(emg, labels, remove_rest=True, keep_only_basic=True)
+            filtered_gestures = len(np.unique(labels))
+            print(f"  Filtered: {original_gestures} → {filtered_gestures} gestures (removed rest)")
             all_emg.append(emg)
             all_labels.append(labels)
             subject_info.append(sid)
@@ -230,6 +234,99 @@ def plot_subject_comparison(y_test, y_pred, subject_labels_test, save_dir):
     plt.savefig(save_dir / 'per_subject_accuracy.png', dpi=300)
     plt.close()
 
+def filter_gestures(emg, labels, remove_rest=True, keep_only_basic=True):
+    """Filter and REMAP gestures."""
+    # Create mask
+    if remove_rest and keep_only_basic:
+        mask = (labels >= 1) & (labels <= 12)
+    elif remove_rest:
+        mask = labels != 0
+    elif keep_only_basic:
+        mask = labels <= 12
+    else:
+        mask = np.ones(len(labels), dtype=bool)
+    
+    filtered_emg = emg[mask]
+    filtered_labels = labels[mask]
+    
+    unique_labels = np.unique(filtered_labels)
+    label_mapping = {old_label: new_idx for new_idx, old_label in enumerate(sorted(unique_labels))}
+    remapped_labels = np.array([label_mapping[lbl] for lbl in filtered_labels])
+    
+    print(f"  Original labels: {unique_labels}")
+    print(f"  Remapped to: {np.unique(remapped_labels)}")
+    print(f"  Label mapping: {label_mapping}")
+    
+    # Check class distribution
+    unique, counts = np.unique(remapped_labels, return_counts=True)
+    print(f"  Class distribution:")
+    for cls, cnt in zip(unique, counts):
+        print(f"    Class {cls}: {cnt} samples")
+    
+    return filtered_emg, remapped_labels, label_mapping
+
+def balance_windows(X, y, subject_labels=None, method='downsample', min_samples=10):
+    """Balance classes after feature extraction."""
+    unique_classes, counts = np.unique(y, return_counts=True)
+    
+    print(f"\nClass distribution BEFORE balancing:")
+    for cls, cnt in zip(unique_classes, counts):
+        print(f"  Class {cls}: {cnt} windows")
+    
+    # Remove classes with too few samples
+    valid_classes = unique_classes[counts >= min_samples]
+    mask = np.isin(y, valid_classes)
+    X, y = X[mask], y[mask]
+    if subject_labels is not None:
+        subject_labels = subject_labels[mask]
+    
+    # Recalculate after filtering
+    unique_classes, counts = np.unique(y, return_counts=True)
+    
+    if method == 'downsample':
+        min_count = counts.min()
+        balanced_indices = []
+        
+        for cls in unique_classes:
+            cls_indices = np.where(y == cls)[0]
+            if len(cls_indices) >= min_count:
+                selected = np.random.choice(cls_indices, min_count, replace=False)
+                balanced_indices.extend(selected)
+        
+        balanced_indices = np.array(balanced_indices)
+        np.random.shuffle(balanced_indices)
+        
+        X_balanced = X[balanced_indices]
+        y_balanced = y[balanced_indices]
+        subject_labels_balanced = subject_labels[balanced_indices] if subject_labels is not None else None
+        
+    elif method == 'upsample':
+        max_count = counts.max()
+        balanced_indices = []
+        
+        for cls in unique_classes:
+            cls_indices = np.where(y == cls)[0]
+            if len(cls_indices) < max_count:
+                selected = np.random.choice(cls_indices, max_count, replace=True)
+            else:
+                selected = cls_indices
+            balanced_indices.extend(selected)
+        
+        balanced_indices = np.array(balanced_indices)
+        np.random.shuffle(balanced_indices)
+        
+        X_balanced = X[balanced_indices]
+        y_balanced = y[balanced_indices]
+        subject_labels_balanced = subject_labels[balanced_indices] if subject_labels is not None else None
+    
+    print(f"\nClass distribution AFTER balancing:")
+    unique_classes, counts = np.unique(y_balanced, return_counts=True)
+    for cls, cnt in zip(unique_classes, counts):
+        print(f"  Class {cls}: {cnt} windows")
+    
+    if subject_labels is not None:
+        return X_balanced, y_balanced, subject_labels_balanced
+    return X_balanced, y_balanced
 
 def main(args):
     """Main training pipeline for multi-subject classification."""
@@ -302,17 +399,31 @@ def main(args):
     print(f"\nFinal dataset sizes:")
     print(f"  Training: {X_train.shape[0]} windows from {len(train_ids)} subjects")
     print(f"  Test: {X_test.shape[0]} windows from {len(test_ids)} subjects")
-    
+
+    # In main(), after balancing:
+    print("\n[4/5] Balancing classes...")
+    X_train, y_train, subject_labels_train = balance_windows(
+        X_train, y_train, subject_labels_train, method='downsample', min_samples=20
+    )
+    X_test, y_test, subject_labels_test = balance_windows(
+        X_test, y_test, subject_labels_test, method='downsample', min_samples=5
+    )
+
     # 5. Train classifier
     print("\n[5/5] Training classifier...")
     classifier = GestureClassifier(classifier_type=args.classifier)
-    
-    model_params = {
-        'C': args.svm_C,
-        'kernel': args.svm_kernel,
-        'gamma': args.svm_gamma
-    } if args.classifier == 'svm' else {}
-    
+
+    # Set model params properly
+    if args.classifier == 'svm':
+        model_params = {
+            'C': args.svm_C,
+            'kernel': args.svm_kernel,
+            'gamma': args.svm_gamma,
+            'class_weight': 'balanced'  
+        }
+    else:
+        model_params = {}
+
     results = classifier.train(
         X_train, y_train,
         cv_folds=args.cv_folds,
@@ -390,7 +501,7 @@ if __name__ == "__main__":
     # Data arguments
     parser.add_argument('--data_dir', type=str, required=True,
                        help='Directory containing NinaPro .mat files')
-    parser.add_argument('--output_dir', type=str, default='./models',
+    parser.add_argument('--output_dir', type=str, default='./wavelength_testing',
                        help='Output directory for models and results')
     parser.add_argument('--num_subjects', type=int, default=27,
                        help='Total number of subjects available')
@@ -404,7 +515,7 @@ if __name__ == "__main__":
     # Preprocessing arguments
     parser.add_argument('--sampling_rate', type=float, default=2000.0,
                        help='EMG sampling rate in Hz')
-    parser.add_argument('--window_length', type=float, default=250.0,
+    parser.add_argument('--window_length', type=float, default=200.0,
                        help='Window length in milliseconds')
     parser.add_argument('--overlap', type=float, default=0.5,
                        help='Window overlap ratio (0.0 to 1.0)')
@@ -427,5 +538,26 @@ if __name__ == "__main__":
     parser.add_argument('--cv_folds', type=int, default=5,
                        help='Number of cross-validation folds')
     
+    # Debug
+    parser.add_argument('--debug', action='store_true',
+                       help='Fast debug mode with minimal subjects for quick testing')
     args = parser.parse_args()
+    if args.debug:
+        print("\n" + "="*70)
+        print("DEBUG")
+        print("="*70)
+        args.train_subjects = "1,2,3"
+        args.test_subjects = "4"
+        args.cv_folds = 3
+        args.overlap = 0.25 
+        args.svm_kernel = 'linear'
+        print(f"  Train subjects: {args.train_subjects}")
+        print(f"  Test subjects: {args.test_subjects}")
+        print(f"  CV folds: {args.cv_folds}")
+        print(f"  Overlap: {args.overlap}")
+        print(f"  Kernel: {args.svm_kernel}")
+        print("="*70 + "\n")
+    
     main(args)
+
+    

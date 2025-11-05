@@ -1,0 +1,24 @@
+Multi-Subject EMG Gesture Recognition Training Summary
+======================================================================
+
+Data Directory: ../data
+Train Subjects: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+Test Subjects: [21, 23, 24, 25]
+
+Classifier: svm
+Window size: 300.0ms
+Overlap: 0.5
+Sampling rate: 2000.0Hz
+Wavelets: False
+
+Training Data: 6705 windows from 20 subjects
+Test Data: 1348 windows from 4 subjects
+
+CV Accuracy (Train Subjects): 0.7381 ± 0.0086
+Test Accuracy (Test Subjects): 0.6076
+
+Per-Subject Test Accuracy:
+  S21: 0.6420
+  S23: 0.5923
+  S24: 0.6350
+  S25: 0.5608

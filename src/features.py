@@ -6,8 +6,10 @@ import warnings
 try:
     import pywt
     PYWT_AVAILABLE = True
+    print("✓ PyWavelets is available")
 except ImportError:
     PYWT_AVAILABLE = False
+    print("✗ PyWavelets NOT available - install with: pip install PyWavelets")
     
 try:
     from statsmodels.tsa.ar_model import AutoReg
@@ -157,15 +159,18 @@ class EMGFeatureExtractor:
     
     # Wavelet features
     def wavelet_features(self, signal: np.ndarray, wavelet: str = 'db4', 
-                        level: int = 4) -> Dict[str, float]:
+                        level: int = 3) -> Dict[str, float]:
         """Extract wavelet-based features."""
         features = {}
         
         if not PYWT_AVAILABLE:
+            print("WARNING: PyWavelets not available, using FFT fallback")
             # Fallback: use simple energy bands from FFT
             fft_features = self.frequency_features(signal)
-            for i in range(level):
-                features[f'wavelet_energy_{i}'] = fft_features.get('band_power_ratio', 0)
+            # Return dummy wavelet features to maintain feature count
+            for i in range(level + 1):
+                features[f'wavelet_energy_{i}'] = fft_features.get('band_power_ratio', 0) / (level + 1)
+                features[f'wavelet_energy_{i}_relative'] = 1.0 / (level + 1)
             return features
         
         try:
@@ -178,11 +183,12 @@ class EMGFeatureExtractor:
                 features[f'wavelet_energy_{i}'] = energy
                 
             # Relative wavelet energy
-            total_energy = sum(features.values())
-            for key in features:
+            total_energy = sum([v for k, v in features.items() if 'relative' not in k])
+            for key in list(features.keys()):
                 features[f'{key}_relative'] = features[key] / (total_energy + 1e-8)
                 
-        except:
+        except Exception as e:
+            print(f"WARNING: Wavelet transform failed: {e}")
             # Return zeros if wavelet transform fails
             for i in range(level + 1):
                 features[f'wavelet_energy_{i}'] = 0
@@ -204,7 +210,7 @@ class EMGFeatureExtractor:
         """
         features = []
         
-        # Time-domain features
+        # Time-domain features (9 features)
         features.append(self.mean_absolute_value(signal))
         features.append(self.root_mean_square(signal))
         features.append(self.waveform_length(signal))
@@ -215,18 +221,20 @@ class EMGFeatureExtractor:
         features.append(stats.skew(signal))
         features.append(stats.kurtosis(signal))
         
-        # Frequency-domain features
+        # Frequency-domain features (6 features)
         freq_features = self.frequency_features(signal)
         features.extend(freq_features.values())
         
-        # AR coefficients
+        # AR coefficients (4 features)
         ar_coeffs = self.ar_coefficients(signal, order=4)
         features.extend(ar_coeffs)
         
-        # Wavelet features (optional)
+        # Wavelet features (optional - 8 features for level=3)
+        # level=3 gives 4 coefficient sets (cA3, cD3, cD2, cD1)
+        # Each has energy + relative = 8 features total
         if use_wavelets:
-            wavelet_features = self.wavelet_features(signal, level=3)
-            features.extend(wavelet_features.values())
+            wavelet_feats = self.wavelet_features(signal, level=3)
+            features.extend(wavelet_feats.values())
         
         return np.array(features)
     
@@ -267,6 +275,7 @@ class EMGFeatureExtractor:
         ]
         
         if use_wavelets:
+            # level=3 gives 4 coefficient sets
             for i in range(4):
                 base_names.extend([f'WavEnergy{i}', f'WavEnergyRel{i}'])
         

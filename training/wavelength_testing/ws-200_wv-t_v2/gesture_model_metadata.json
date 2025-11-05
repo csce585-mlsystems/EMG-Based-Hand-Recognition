@@ -1,0 +1,29 @@
+{
+  "classifier_type": "svm",
+  "model_params": {
+    "C": 0.1,
+    "kernel": "rbf",
+    "gamma": "scale",
+    "class_weight": "balanced"
+  },
+  "n_features": 270,
+  "n_classes": 12,
+  "classes": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+  ],
+  "cv_accuracy_mean": 0.4288541635720864,
+  "cv_accuracy_std": 0.012212587298729531,
+  "training_date": "2025-11-04T17:52:29.593424",
+  "training_samples": 4104
+}
