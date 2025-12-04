@@ -1,0 +1,6 @@
+numpy>=1.21
+scikit-learn>=1.0
+matplotlib>=3.5
+seaborn>=0.11
+scipy>=1.7
+tqdm>=4.60

@@ -1,0 +1,15 @@
+[project]
+name = "emg-based-hand-recognition"
+version = "0.1.0"
+description = "EMG hand gesture classification using Random Forest and feature extraction."
+requires-python = ">=3.10"
+
+dependencies = [
+    "numpy",
+    "scikit-learn",
+    "matplotlib",
+    "seaborn",
+]
+
+[tool.uv]
+# ensures uv treats this as a python project
