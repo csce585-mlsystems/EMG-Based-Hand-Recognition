@@ -122,6 +122,13 @@ pip install -r requirements.txt
 
 
 ### How to Run
+
+Main Pipeline:
 ```bash
 uv run training/train_rf.py
+```
+
+UI:
+```bash
+streamlit run UI/emg_ui.py
 ```
