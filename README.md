@@ -1,4 +1,4 @@
-# Real-Time EMG-Based Hand Gesture Recognition using SVM
+# Real-Time EMG-Based Hand Gesture Recognition 
 
 ## Group Info
 - Ashwin Sakthivel  
