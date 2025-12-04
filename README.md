@@ -44,47 +44,84 @@ You can install everything via:
 pip install -r requirements.txt
 
 ## Project Directory
-
-EMG-Based-Hand-Recognition/
-│
-├── data/
-│   └── processed_data_A1.npz
-│
-├── docs/
-│   ├── CurrentFindings.pdf
-│   ├── FinalReport.pdf
-│   ├── ProjectPresentation.pdf
-│   └── proposal.pdf
-│
-├── results/
-│   ├── confusion_rf_norm.png
-│   ├── confusion_rf_raw.png
-│   └── feature_analysis.png
-│
-├── src/
-│   ├── __init__.py
-│   ├── analyze_features.py
-│   ├── gesture_signal_analyzer.py
-│   └── gesture_analysis_S1/
-│       ├── G10_vs_G9/
-│       ├── G11_vs_G9/
-│       ├── G2_vs_G0/
-│       ├── G3_vs_G2/
-│       └── G8_vs_G9/
-│
-├── training/
-│   └── train_rf.py
-│
-├── utils/
-│   ├── __init__.py
-│   └── dataloader.py
-│
+```bash
+├── confusion_rf_norm.png
+├── confusion_rf_raw.png
+├── data
+│   └── processed_data_A1.npz
+├── docs
+│   ├── CurrentFindings.pdf
+│   ├── Demo.mov
+│   ├── Final Presentation.pdf
+│   ├── FinalReport.pdf
+│   ├── ProjectPresentation.pdf
+│   └── proposal.pdf
+├── overlap_3_4.png
 ├── pyproject.toml
-├── uv.lock
+├── raw_data
+│   
+├── README.md
 ├── requirements.txt
-└── README.md
+├── results
+│   ├── confusion_rf_norm.png
+│   ├── confusion_rf_raw.png
+│   └── feature_analysis.png
+├── src
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-310.pyc
+│   │   ├── __init__.cpython-312.pyc
+│   │   ├── classifier.cpython-312.pyc
+│   │   ├── features.cpython-310.pyc
+│   │   ├── features.cpython-312.pyc
+│   │   ├── preprocessing.cpython-312.pyc
+│   │   ├── stream_predictor.cpython-310.pyc
+│   │   └── windowing.cpython-312.pyc
+│   ├── analyze_features.py
+│   ├── gesture_analysis_S1
+│   │   ├── G10_vs_G9
+│   │   │   ├── pca_G10_G9.png
+│   │   │   ├── psd_comparison_G10_G9.png
+│   │   │   ├── raw_signals_G10_G9.png
+│   │   │   └── rms_comparison_G10_G9.png
+│   │   ├── G11_vs_G9
+│   │   │   ├── psd_comparison_G11_G9.png
+│   │   │   ├── raw_signals_G11_G9.png
+│   │   │   └── rms_comparison_G11_G9.png
+│   │   ├── G2_vs_G0
+│   │   │   ├── pca_G2_G0.png
+│   │   │   ├── psd_comparison_G2_G0.png
+│   │   │   ├── raw_signals_G2_G0.png
+│   │   │   └── rms_comparison_G2_G0.png
+│   │   ├── G3_vs_G2
+│   │   │   ├── pca_G3_G2.png
+│   │   │   ├── psd_comparison_G3_G2.png
+│   │   │   ├── raw_signals_G3_G2.png
+│   │   │   └── rms_comparison_G3_G2.png
+│   │   └── G8_vs_G9
+│   │       ├── pca_G8_G9.png
+│   │       ├── psd_comparison_G8_G9.png
+│   │       ├── raw_signals_G8_G9.png
+│   │       └── rms_comparison_G8_G9.png
+│   ├── gesture_signal_analyzer.py
+│   └── preprocessing.py
+├── training
+│   ├── __pycache__
+│   │   └── train.cpython-312.pyc
+│   └── train_rf.py
+├── UI
+│   └── emg_ui.py
+├── utils
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-312.pyc
+│   │   └── dataloader.cpython-312.pyc
+│   └── dataloader.py
+└── uv.lock
+```
+
 
 ### How to Run
-
+```bash
 uv run training/train_rf.py
-
+```
