@@ -5,7 +5,7 @@
 - Email: ashwins@email.sc.edu   
 
 ## Abstract
-This project explores the development of a real-time hand gesture recognition system using electromyography (EMG) signals and Support Vector Machines (SVM). The pipeline processes raw EMG data, extracts relevant features, and classifies hand gestures with high accuracy. The system also evaluates latency and throughput to balance accuracy with responsiveness. This work demonstrates the feasibility of EMG-based human–computer interaction.
+This project explores the development of a real-time hand gesture recognition system using electromyography (EMG) signals and a Random Forest model. The pipeline processes raw EMG data, extracts relevant features, and classifies hand gestures with high accuracy. The system also evaluates latency and throughput to balance accuracy with responsiveness. This work demonstrates the feasibility of EMG-based human–computer interaction.
 
 ## Problem Description
 - **Problem description:** Hand gesture recognition using EMG signals is challenged by noisy data, variable muscle signals, and the need for real-time performance. The problem is to design a pipeline that ensures accurate classification while maintaining low latency.
